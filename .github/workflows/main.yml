@@ -240,12 +240,14 @@ jobs:
           path: ${{ github.workspace }}/obs-studio
           submodules: "recursive"
       - name: "Install Prerequisite: Application Signing Certificate"
+        if: ${{ secrets.APPLICATION_CERTIFICATE != '' && secrets.APPLICATION_CERTIFICATE_PASSWORD != '' }}
         uses: apple-actions/import-codesign-certs@v1
         with:
           p12-file-base64: ${{ secrets.APPLICATION_CERTIFICATE }}
           p12-password: ${{ secrets.APPLICATION_CERTIFICATE_PASSWORD }}
           keychain-password: password
       - name: "Install Prerequisite: Installer Signing Certificate"
+        if: ${{ secrets.INSTALLER_CERTIFICATE != '' && secrets.INSTALLER_CERTIFICATE_PASSWORD != '' }}
         uses: apple-actions/import-codesign-certs@v1
         with:
           p12-file-base64: ${{ secrets.INSTALLER_CERTIFICATE }}
@@ -374,7 +376,8 @@ jobs:
           	-change /tmp/obsdeps/lib/QtSvg.framework/Versions/5/QtSvg \
           		@executable_path/../Frameworks/QtSvg.framework/Versions/5/QtSvg \
           	./build/obs-ios-camera-source.so
-          codesign --sign "${{ secrets.APPLICATION_CERTIFICATE_IDENTITY }}" ./build/obs-ios-camera-source.so
+          codesign --sign - ./build/obs-ios-camera-source.so
+          if [ -n "${{ secrets.APPLICATION_CERTIFICATE_IDENTITY }}" ] ; then codesign --sign "${{ secrets.APPLICATION_CERTIFICATE_IDENTITY }}" ./build/obs-ios-camera-source.so ; fi
       - name: "Set PR Artifact Filename"
         shell: bash
         run: |
@@ -391,12 +394,17 @@ jobs:
         shell: bash
         working-directory: ${{ github.workspace }}/obs-ios-camera-source
         run: |
+          if [ -n "${{ secrets.INSTALLER_CERTIFICATE_IDENTITY }}" ] ; then \
           productsign \
             --sign "${{ secrets.INSTALLER_CERTIFICATE_IDENTITY }}" \
             ./release/${{ env.MACOS_FILENAME_UNSIGNED }} \
-            ./release/${{ env.MACOS_FILENAME }}
-          rm ./release/${{ env.MACOS_FILENAME_UNSIGNED }}
+            ./release/${{ env.MACOS_FILENAME }} \
+          && rm ./release/${{ env.MACOS_FILENAME_UNSIGNED }} \
+          ; else \
+            mv ./release/${{ env.MACOS_FILENAME_UNSIGNED }} ./release/${{ env.MACOS_FILENAME }} \
+          ; fi
       - name: "Notarize package"
+        if: ${{ secrets.AC_USERNAME != '' && secrets.AC_PASSWORD != '' }}
         shell: bash
         working-directory: ${{ github.workspace }}/obs-ios-camera-source
         run: |
