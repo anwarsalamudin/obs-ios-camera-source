@@ -49,12 +49,12 @@ jobs:
       - name: "Add msbuild to PATH"
         uses: microsoft/setup-msbuild@v1.0.2
       - name: "Checkout obs-ios-camera-source"
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           path: ${{ github.workspace }}/obs-ios-camera-source
           submodules: "recursive"
       - name: "Checkout OBS-Studio"
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: obsproject/obs-studio
           path: ${{ github.workspace }}/obs-studio
@@ -92,7 +92,7 @@ jobs:
           echo "CMAKE_VERSION_SUFFIX=$VERSION_SUFFIX" >> $GITHUB_ENV
       - name: "Restore Cached Qt"
         id: qtcache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: Qt_${{ env.QT_VERSION }}.7z
           key: "qtdep-${{ env.QT_CACHE_VERSION }} | ${{ runner.os }}"
@@ -108,7 +108,7 @@ jobs:
 
       - name: "Restore Cached Vcpkg dependencies"
         id: vcpkgcache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: "C:/vcpkg/"
           key: "vcpkgcachedeps-${{ env.VCPKG_CACHE_VERSION }} | ${{ runner.os }}"
@@ -121,7 +121,7 @@ jobs:
           vcpkg install openssl:x64-windows-static
       - name: "Restore Cached OBS-Studio Dependencies"
         id: obscache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}\cmbuild\deps\**
           key: "obsdep-${{ env.WINDOWS_DEPS_CACHE_VERSION }} | ${{ runner.os }}"
@@ -134,7 +134,7 @@ jobs:
           7z x dependencies${{ env.WINDOWS_DEPS_VERSION }}.zip -o"${{ github.workspace }}\cmbuild\deps"
       - name: "Restore OBS-Studio 32-bit Build v${{ env.OBS_GIT_TAG }} from Cache"
         id: build-cache-obs-32
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         env:
           CACHE_NAME: "build-cache-obs-32"
         with:
@@ -157,7 +157,7 @@ jobs:
           msbuild /m /p:Configuration=RelWithDebInfo .\build32\UI\obs-frontend-api\obs-frontend-api.vcxproj
       - name: "Restore OBS-Studio 64-bit Build v${{ env.OBS_GIT_TAG }} from Cache"
         id: build-cache-obs-64
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         env:
           CACHE_NAME: "build-cache-obs-64"
         with:
@@ -209,16 +209,16 @@ jobs:
           iscc ..\installer\installer.iss /O. /F"${{ env.WIN_FILENAME }}-Installer"
       - name: "Publish ${{ env.WIN_FILENAME }}.zip"
         if: success()
-        uses: actions/upload-artifact@v2-preview
+        uses: actions/upload-artifact@v4
         with:
           name: "obs-ios-camera-source-${{ env.PACKAGE_VERSION }}-Windows"
-          path: ${{ github.workspace }}/obs-ios-camera-source/package/*.zip
+          path: obs-ios-camera-source/package/*.zip
       - name: "Publish ${{ env.WIN_FILENAME }}-Installer.exe"
         if: success()
-        uses: actions/upload-artifact@v2-preview
+        uses: actions/upload-artifact@v4
         with:
           name: "obs-ios-camera-source-${{ env.PACKAGE_VERSION }}-Windows-Installer"
-          path: ${{ github.workspace }}/obs-ios-camera-source/package/*.exe
+          path: obs-ios-camera-source/package/*.exe
   macOS:
     name: "macOS 64-bit"
     environment: production
@@ -229,12 +229,12 @@ jobs:
       MACOS_DEPS_CACHE_VERSION: "1" # Change whenever updating dependencies version, in order to force a cache reset
     steps:
       - name: "Checkout obs-ios-camera-source"
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           path: ${{ github.workspace }}/obs-ios-camera-source
           submodules: "recursive"
       - name: "Checkout OBS-Studio"
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: obsproject/obs-studio
           path: ${{ github.workspace }}/obs-studio
@@ -291,7 +291,7 @@ jobs:
           sudo installer -pkg /Volumes/Packages\ 1.2.10/Install\ Packages.pkg -target /
       - name: "Restore Cached Qt & OBS-Studio dependencies"
         id: deps-cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/obsdeps/**
           key: "deps-cache-${{ env.MACOS_DEPS_CACHE_VERSION }} | ${{ runner.os }}"
@@ -427,7 +427,7 @@ jobs:
           done
       - name: "Publish ${{ env.MACOS_FILENAME }}"
         if: success()
-        uses: actions/upload-artifact@v2-preview
+        uses: actions/upload-artifact@v4
         with:
           name: "obs-ios-camera-source-${{ env.PACKAGE_VERSION }}-macOS"
-          path: "${{ github.workspace }}/obs-ios-camera-source/release/${{ env.MACOS_FILENAME }}"
+          path: "obs-ios-camera-source/release/${{ env.MACOS_FILENAME }}"
