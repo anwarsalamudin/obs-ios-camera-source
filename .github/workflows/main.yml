@@ -319,7 +319,7 @@ jobs:
       - run: xattr -r -d com.apple.quarantine ./obsdeps
         shell: bash
       - name: "Configue OBS-Studio"
-        if: steps.cache-obs-build.outputs.cache-hit != 'true'
+        if: steps.deps-cache.outputs.cache-hit != 'true'
         working-directory: ${{ github.workspace }}/obs-studio
         shell: bash 
         run: |
@@ -333,7 +333,7 @@ jobs:
             -DENABLE_SCRIPTING=0 \
             -DCMAKE_PREFIX_PATH=${{ github.workspace }}/obsdeps/lib/cmake
       - name: "Build OBS-Studio"
-        if: steps.cache-obs-build.outputs.cache-hit != 'true'
+        if: steps.deps-cache.outputs.cache-hit != 'true'
         working-directory: ${{ github.workspace }}/obs-studio
         shell: bash
         run: |
