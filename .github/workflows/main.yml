@@ -227,6 +227,10 @@ jobs:
     env:
       MACOS_DEPS_VERSION: "2021-12-05"
       MACOS_DEPS_CACHE_VERSION: "1" # Change whenever updating dependencies version, in order to force a cache reset
+      # secrets are not allowed inside `if:`; mirror them into env flags
+      HAS_APP_CERT: ${{ secrets.APPLICATION_CERTIFICATE != '' && secrets.APPLICATION_CERTIFICATE_PASSWORD != '' }}
+      HAS_INSTALLER_CERT: ${{ secrets.INSTALLER_CERTIFICATE != '' && secrets.INSTALLER_CERTIFICATE_PASSWORD != '' }}
+      HAS_NOTARIZE: ${{ secrets.AC_USERNAME != '' && secrets.AC_PASSWORD != '' }}
     steps:
       - name: "Checkout obs-ios-camera-source"
         uses: actions/checkout@v4
@@ -240,14 +244,14 @@ jobs:
           path: ${{ github.workspace }}/obs-studio
           submodules: "recursive"
       - name: "Install Prerequisite: Application Signing Certificate"
-        if: ${{ secrets.APPLICATION_CERTIFICATE != '' && secrets.APPLICATION_CERTIFICATE_PASSWORD != '' }}
+        if: env.HAS_APP_CERT == 'true'
         uses: apple-actions/import-codesign-certs@v1
         with:
           p12-file-base64: ${{ secrets.APPLICATION_CERTIFICATE }}
           p12-password: ${{ secrets.APPLICATION_CERTIFICATE_PASSWORD }}
           keychain-password: password
       - name: "Install Prerequisite: Installer Signing Certificate"
-        if: ${{ secrets.INSTALLER_CERTIFICATE != '' && secrets.INSTALLER_CERTIFICATE_PASSWORD != '' }}
+        if: env.HAS_INSTALLER_CERT == 'true'
         uses: apple-actions/import-codesign-certs@v1
         with:
           p12-file-base64: ${{ secrets.INSTALLER_CERTIFICATE }}
@@ -404,7 +408,7 @@ jobs:
             mv ./release/${{ env.MACOS_FILENAME_UNSIGNED }} ./release/${{ env.MACOS_FILENAME }} \
           ; fi
       - name: "Notarize package"
-        if: ${{ secrets.AC_USERNAME != '' && secrets.AC_PASSWORD != '' }}
+        if: env.HAS_NOTARIZE == 'true'
         shell: bash
         working-directory: ${{ github.workspace }}/obs-ios-camera-source
         run: |
