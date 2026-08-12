@@ -426,11 +426,9 @@ static obs_properties_t *GetIOSCameraProperties(void *data)
 		obs_module_text("OBSIOSCamera.Settings.Latency.Low"),
 		SETTING_PROP_LATENCY_LOW);
 
-#ifdef __APPLE__
 	obs_properties_add_bool(
 		ppts, SETTING_PROP_HARDWARE_DECODER,
 		obs_module_text("OBSIOSCamera.Settings.UseHardwareDecoder"));
-#endif
 
 	obs_properties_add_bool(
 		ppts, SETTING_PROP_DISCONNECT_ON_INACTIVE,
@@ -444,10 +442,8 @@ static void GetIOSCameraDefaults(obs_data_t *settings)
 	obs_data_set_default_string(settings, SETTING_DEVICE_UUID, "");
 	obs_data_set_default_int(settings, SETTING_PROP_LATENCY,
 				 SETTING_PROP_LATENCY_LOW);
-#ifdef __APPLE__
 	obs_data_set_default_bool(settings, SETTING_PROP_HARDWARE_DECODER,
-				  false);
-#endif
+				  true);
 	obs_data_set_default_bool(settings, SETTING_PROP_DISCONNECT_ON_INACTIVE,
 				  false);
 }

@@ -33,6 +33,18 @@ FFMpegVideoDecoder::~FFMpegVideoDecoder()
 
 void FFMpegVideoDecoder::Init()
 {
+    // Read hardware-decoder preference from the source's settings, e.g.
+    // "setting_use_hw_decoder" (same key the macOS path uses).
+    if (source) {
+        obs_data_t *settings = obs_source_get_settings(source);
+        if (settings) {
+            use_hw_decoder = obs_data_get_bool(settings, "setting_use_hw_decoder");
+            if (obs_data_has_user_value(settings, "setting_use_hw_decoder") == false)
+                use_hw_decoder = true; // default on for Windows (D3D11VA)
+            obs_data_release(settings);
+        }
+    }
+    hw_attempted = false;
     // Start the thread.
     this->start();
 }
@@ -74,11 +86,15 @@ void FFMpegVideoDecoder::processPacketItem(PacketItem *packetItem)
 	mMutex.lock();
 	uint64_t cur_time = os_gettime_ns();
 	if (!ffmpeg_decode_valid(video_decoder)) {
-		if (ffmpeg_decode_init(video_decoder, AV_CODEC_ID_H264) < 0) {
+		// Attempt hardware decode (D3D11VA/QSV) on the first init when enabled;
+		// fall back to software automatically if HW init fails.
+		bool try_hw = use_hw_decoder && !hw_attempted;
+		if (ffmpeg_decode_init(video_decoder, AV_CODEC_ID_H264, try_hw) < 0) {
 			blog(LOG_WARNING, "Could not initialize video decoder");
 			mMutex.unlock();
 			return;
 		}
+		hw_attempted = true;
 	}
 
 	auto packet = packetItem->getPacket();
@@ -90,6 +106,7 @@ void FFMpegVideoDecoder::processPacketItem(PacketItem *packetItem)
 
         bool got_output;
         bool success = ffmpeg_decode_video(video_decoder, data, packet.size(), &ts,
+                                           VIDEO_CS_DEFAULT, VIDEO_RANGE_DEFAULT,
                                            &video_frame, &got_output);
 
         profile_end(ffmpeg_decode_video_name);
@@ -102,7 +119,7 @@ void FFMpegVideoDecoder::processPacketItem(PacketItem *packetItem)
 
 		if (got_output && source != nullptr) {
 			video_frame.timestamp = cur_time;
-			obs_source_output_video(source, &video_frame);
+			obs_source_output_video2(source, &video_frame);
 		}
 	}
 	mMutex.unlock();

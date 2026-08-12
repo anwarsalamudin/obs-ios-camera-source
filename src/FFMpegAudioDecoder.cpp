@@ -67,7 +67,7 @@ void FFMpegAudioDecoder::processPacketItem(PacketItem *packetItem)
 
     if (!ffmpeg_decode_valid(audio_decoder))
     {
-        if (ffmpeg_decode_init(audio_decoder, AV_CODEC_ID_AAC) < 0)
+        if (ffmpeg_decode_init(audio_decoder, AV_CODEC_ID_AAC, false) < 0)
         {
             blog(LOG_WARNING, "Could not initialize audio decoder");
             return;

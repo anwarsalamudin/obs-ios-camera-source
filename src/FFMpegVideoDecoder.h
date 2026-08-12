@@ -69,7 +69,9 @@ public:
 	std::weak_ptr<Delegate> getDelegate() { return delegate; };
 
 	    obs_source_t *source;
-	obs_source_frame video_frame;
+	obs_source_frame2 video_frame;
+	bool use_hw_decoder = true;
+	bool hw_attempted = false;
 
 
 private:
